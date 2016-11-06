@@ -3,6 +3,8 @@ import time
 from django.utils.functional import cached_property
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.utils.decorators import method_decorator
 
 from django.shortcuts import render
 
@@ -70,6 +72,12 @@ class SlackinMixin(object):
         context.update(self._get_users_context(slack))
         return context
 
+
+def maybe_decorate(condition, decorator):
+    return decorator if condition else lambda x: x
+
+
+@method_decorator(maybe_decorate(getattr(settings, 'SLACKIN_ENABLE_IFRAME', False), xframe_options_exempt), name='dispatch')
 class SlackinInviteView(SlackinMixin, View):
     template_name = 'slackin/invite/page.html'
 
